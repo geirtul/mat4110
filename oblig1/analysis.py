@@ -40,7 +40,19 @@ def forward_substitution(mat_A, b):
         x[i] = (b[i] - sum)/mat_A[i,i]
     return x
 
+def find_coeffs_from_data(data):
+    """Find the coefficients for a smooth function fitting."""
+    A = vandermonde_matrix(data)
+    q,r = np.linalg.qr(A)
+    coeffs = back_substitution(r, data)
+    return coeffs
+
 def polynomial_degree_m(x, coeffs, m):
+    """
+    Generate p(x) where p is a polynomial of degree mself.
+    The polynomial coefficients are found using QR factorization and
+    back substitution. (find_coeffs_from_data)
+    """
     N = len(x)
     p = np.zeros(N)
     for i in range(N):
@@ -48,49 +60,29 @@ def polynomial_degree_m(x, coeffs, m):
             p[i] += coeffs[j]*x[i]**(j-1)
     return p
 
-
 # Datasets as defined from generate_data.py
-def dataset_one(x):
-    import numpy as np
-    eps = 1
-    np.random.seed(1) # use same seed every time
-    r = np.random.random(n) * eps
-    y = x*(np.cos(r + 0.5*x**3) + np.sin(0.5*x**3))
-    return y
-
-def dataset_two(x):
-    import numpy as np
-    eps = 1
-    np.random.seed(1) # use same seed every time
-    r = np.random.random(n) * eps
-    y = 4*x**5 - 5*x**4 - 20*x**3 + 10*x*x + 40*x + r
-    return y
-
 n = 30
 start = -2
 stop = 2
 x = np.linspace(start, stop, n)
+eps = 1
+np.random.seed(1) # use same seed every time
+r = np.random.random(n) * eps
+data_one = x*(np.cos(r + 0.5*x**3) + np.sin(0.5*x**3))
+data_two = 4*x**5 - 5*x**4 - 20*x**3 + 10*x*x + 40*x + r
 
-data_one = dataset_one(x)
-data_two = dataset_two(x)
-
-# Matrix operations
-A_one = vandermonde_matrix(data_one)
-q_one,r_one = np.linalg.qr(A_one)
-coeffs_one = back_substitution(r_one, data_one)
-
-A_two = vandermonde_matrix(data_two)
-q_two,r_two = np.linalg.qr(A_two)
-coeffs_two = back_substitution(r_two, data_two)
+# Find coefficients
+coeffs_one = find_coeffs_from_data(data_one)
+coeffs_two = find_coeffs_from_data(data_two)
 
 # Plotting
 plt.subplot(1,2,1)
-plt.plot(data_one[0], data_one[1], 'o')
-plt.plot(x, polynomial_degree_m(x, coeffs_one, 3), 'r', label='Fit')
+plt.plot(x, data_one, 'o')
+plt.plot(x, polynomial_degree_m(x, coeffs_one, 4), 'r', label='Fit')
 
 plt.subplot(1,2,2)
-plt.plot(data_two[0], data_two[1], 'o')
-plt.plot(x, polynomial_degree_m(x, coeffs_two, 3), 'r', label='Fit')
+plt.plot(x, data_two, 'o')
+plt.plot(x, polynomial_degree_m(x, coeffs_two, 4), 'r', label='Fit')
 
 plt.legend()
 plt.show()
