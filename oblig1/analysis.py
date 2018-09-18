@@ -1,11 +1,9 @@
-from generate_data import dataset_one, dataset_two
 import numpy as np
 import matplotlib.pyplot as plt
 
 # Funciton definitions
 def vandermonde_matrix(x_data):
     """Generate the vendermonde matrix associated with the data set"""
-
     N = len(x_data)
     A = np.ones((N,N))
     for i in range(1,N):
@@ -42,25 +40,57 @@ def forward_substitution(mat_A, b):
         x[i] = (b[i] - sum)/mat_A[i,i]
     return x
 
+def polynomial_degree_m(x, coeffs, m):
+    N = len(x)
+    p = np.zeros(N)
+    for i in range(N):
+        for j in range(m):
+            p[i] += coeffs[j]*x[i]**(j-1)
+    return p
+
+
 # Datasets as defined from generate_data.py
-data_one = dataset_one()
-data_two = dataset_two()
+def dataset_one(x):
+    import numpy as np
+    eps = 1
+    np.random.seed(1) # use same seed every time
+    r = np.random.random(n) * eps
+    y = x*(np.cos(r + 0.5*x**3) + np.sin(0.5*x**3))
+    return y
+
+def dataset_two(x):
+    import numpy as np
+    eps = 1
+    np.random.seed(1) # use same seed every time
+    r = np.random.random(n) * eps
+    y = 4*x**5 - 5*x**4 - 20*x**3 + 10*x*x + 40*x + r
+    return y
+
+n = 30
+start = -2
+stop = 2
+x = np.linspace(start, stop, n)
+
+data_one = dataset_one(x)
+data_two = dataset_two(x)
 
 # Matrix operations
-A_one = vandermonde_matrix(data_one[0])
+A_one = vandermonde_matrix(data_one)
 q_one,r_one = np.linalg.qr(A_one)
-coeff_one = back_substitution(r_one, data_one[1])
+coeffs_one = back_substitution(r_one, data_one)
 
-A_two = vandermonde_matrix(data_two[0])
+A_two = vandermonde_matrix(data_two)
 q_two,r_two = np.linalg.qr(A_two)
-coeff_two = back_substitution(r_two, data_two[1])
+coeffs_two = back_substitution(r_two, data_two)
 
 # Plotting
 plt.subplot(1,2,1)
 plt.plot(data_one[0], data_one[1], 'o')
-# plt.plot(x_fit_one, polynomial_fit_one, 'r-', title='Fit')
+plt.plot(x, polynomial_degree_m(x, coeffs_one, 3), 'r', label='Fit')
+
 plt.subplot(1,2,2)
 plt.plot(data_two[0], data_two[1], 'o')
-# plt.plot(x_fit_two, polynomial_fit_two, 'r-', title='Fit')
+plt.plot(x, polynomial_degree_m(x, coeffs_two, 3), 'r', label='Fit')
+
 plt.legend()
 plt.show()
