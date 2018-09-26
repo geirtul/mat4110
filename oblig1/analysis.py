@@ -22,7 +22,6 @@ def back_substitution(mat_A, b):
         sum = 0
         for j in range(i+1,N):
             sum += mat_A[i,j]*x[j]
-        print("SUM = ", sum)
         x[i] = (b[i] - sum)/mat_A[i,i]
     return x
 
@@ -46,6 +45,22 @@ def find_coeffs_from_data(data, m):
     q,r = np.linalg.qr(A)
     coeffs = back_substitution(r, q.T.dot(data))
     return coeffs
+
+def cholesky_factorization(A):
+    """Performs cholesky factorization on a positive definite
+    matrix A. Here A is defined by vandermonde_matrix()"""
+    A_curr = np.copy(A)
+    L = np.zeros(A.shape)
+    L_T = np.zeros(A.shape)
+    D = np.zeros(A.shape)
+    for i in range(A.shape[1]):
+        L[:,i] = A_curr[:,i]/A_curr[i,i]
+        D[i,i] = A_curr[i,i]
+        L_dot_L_T = np.c_[L[:,i]].dot(np.c_[L[:,i]].T)
+        A_curr = A_curr - D[i,i]*L_dot_L_T
+
+    return [L, D, L.T]
+
 
 def polynomial_degree_m(x, coeffs, m):
     """
@@ -72,7 +87,7 @@ if __name__ == '__main__':
     data_one = x*(np.cos(r + 0.5*x**3) + np.sin(0.5*x**3))
     data_two = 4*x**5 - 5*x**4 - 20*x**3 + 10*x*x + 40*x + r
 
-    m = 5 # degree of p(x)
+    m = 3 # degree of p(x)
 
     # Find coefficients
     coeffs_one = find_coeffs_from_data(data_one, m)

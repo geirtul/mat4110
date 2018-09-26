@@ -39,5 +39,18 @@ class TestLinregMethods(unittest.TestCase):
         computed_p = polynomial_degree_m(x_in, coeffs, m)
         self.assertTrue(np.array_equal(expected_p, computed_p))
 
+    def test_cholesky_factorization(self):
+        """Test that the cholesky factorization algorithm does the thing."""
+        testmat = np.c_[[3,4], [4,6]]
+        exp_L = np.c_[[1.0,4/3],[0,1.0]]
+        exp_D = np.c_[[3.0,0],[0,2/3]]
+        exp_L_T = exp_L.T
+        comp_L, comp_D, comp_L_T = cholesky_factorization(testmat)
+
+        # Because of floats and unrational numbers np.allclose is used
+        # instead of np.array_equal in order to set a suitable threshold
+        self.assertTrue(np.allclose(exp_L,comp_L, 1e-16))
+        self.assertTrue(np.allclose(exp_D,comp_D,1e-16))
+        self.assertTrue(np.allclose(exp_L_T,comp_L_T,1e-16))
 if __name__ == '__main__':
     unittest.main()
