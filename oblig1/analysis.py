@@ -18,10 +18,12 @@ def back_substitution(mat_A, b):
     """
     N = len(mat_A[0])
     x = np.zeros(N)
+    print("Inside back_substitution.\n")
     for i in reversed(range(N)):
         sum = 0
         for j in range(i+1,N):
             sum += mat_A[i,j]*x[j]
+        print("Sum = ", sum, " | b[i] = ", b[i])
         x[i] = (b[i] - sum)/mat_A[i,i]
     return x
 
@@ -43,6 +45,8 @@ def find_coeffs_from_data(data, m):
     """Find the coefficients for a smooth function fitting."""
     A = vandermonde_matrix(data, m)
     q,r = np.linalg.qr(A)
+    print("Inside find coeffs. What is Q_T dot data?")
+    print(q.T.dot(data))
     coeffs = back_substitution(r, q.T.dot(data))
     return coeffs
 
@@ -77,6 +81,10 @@ def polynomial_degree_m(x, coeffs, m):
 
 if __name__ == '__main__':
     """Runs the calculations."""
+    print("\n========================================================")
+    print("===================  BEGIN NEW RUN =====================")
+    print("========================================================\n")
+
     # Datasets as defined in task.
     n = 30
     start = -2
