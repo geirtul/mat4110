@@ -76,12 +76,13 @@ def polynomial_degree_m(x, coeffs, m):
     return polynomial
 
 if __name__ == '__main__':
-    # Datasets as defined from generate_data.py
+    """Runs the calculations."""
+    # Datasets as defined in task.
     n = 30
-    start = -2.0
-    stop = 2.0
+    start = -2
+    stop = 2
     x = np.linspace(start, stop, n)
-    eps = 1.0
+    eps = 1
     np.random.seed(1) # use same seed every time
     r = np.random.random(n) * eps
     data_one = x*(np.cos(r + 0.5*x**3) + np.sin(0.5*x**3))
@@ -89,16 +90,29 @@ if __name__ == '__main__':
 
     m = 3 # degree of p(x)
 
+    # =============================================
+    # =  QR-Factorization part                    =
+    # =============================================
     # Find coefficients
     coeffs_one = find_coeffs_from_data(data_one, m)
-    #print(coeffs_one)
-    #coeffs_two = find_coeffs_from_data(data_two, m)
-    #print(coeffs_two)
+    coeffs_two = find_coeffs_from_data(data_two, m)
+    test_A_one = vandermonde_matrix(data_one, m)
+    test_A_two = vandermonde_matrix(data_two, m)
+    test_coeffs_one = np.linalg.solve(test_A_one.T.dot(test_A_one), test_A_one.T.dot(data_one))
+    test_coeffs_two = np.linalg.solve(test_A_two.T.dot(test_A_two), test_A_two.T.dot(data_two))
 
+    print("QR factorization results\n=======================")
+    print("Dataset one, computed coefficients and np.linalg result:")
+    print(coeffs_one)
+    print(test_coeffs_one)
+    print("\nDataset one, computed coefficients and np.linalg result:")
+    print(coeffs_two)
+    print(test_coeffs_two)
+    print("=============")
 
     # Generate polynomial fits.
     poly_one = polynomial_degree_m(x, coeffs_one, m)
-    #poly_two = polynomial_degree_m(x, coeffs_two, m)
+    poly_two = polynomial_degree_m(x, coeffs_two, m)
 
     # Plotting
     plt.subplot(1,2,1)
@@ -108,7 +122,53 @@ if __name__ == '__main__':
 
     plt.subplot(1,2,2)
     plt.plot(x, data_two, 'o')
-    #plt.plot(x, poly_two, 'r', label='Fit')
+    plt.plot(x, poly_two, 'r', label='Fit')
     plt.legend()
 
     plt.show()
+    # =============================================
+    # =  Cholesky factorization                   =
+    # =============================================
+
+    # Set up matrices
+    A_one = vandermonde_matrix(data_one,m)
+    A_one_T = A_one.T
+    B_one = A_one.T.dot(A_one)
+    L_one,D_one,L_one_T = cholesky_factorization(B_one)
+
+    A_two = vandermonde_matrix(data_two,m)
+    A_two_T = A_two.T
+    B_two = A_two.T.dot(A_two)
+    L_two,D_two,L_two_T = cholesky_factorization(B_two)
+
+    # Make R and R^T for solving R^T*x=y and Ry=A^T*B
+    R_one = L_one.dot(np.sqrt(D_one))
+    R_one_T = R_one.T
+
+    R_two = L_two.dot(np.sqrt(D_two))
+    R_two_T = R_two.T
+    # Solve Ry = A^T B
+    coeffs_one_y = forward_substitution(R_one, A_one_T.dot(data_one))
+    coeffs_two_y = forward_substitution(R_two, A_two_T.dot(data_two))
+    test_one_y = np.linalg.solve(R_one, A_one_T.dot(data_one))
+    test_two_y = np.linalg.solve(R_two, A_two_T.dot(data_two))
+    print("\nCholesky factorization results\n=======================")
+    print("Dataset one, computed coeffs _y_ and np.linalg result:")
+    print(coeffs_one_y)
+    print(test_one_y)
+    print("\nDataset two, computed coeffs _y_ and np.linalg result:")
+    print(coeffs_two_y)
+    print(test_two_y)
+
+    # Solve R_T x = y
+    coeffs_one_x = back_substitution(R_one_T, coeffs_one_y)
+    coeffs_two_x = back_substitution(R_two_T, coeffs_two_y)
+    test_one_x = np.linalg.solve(R_one_T, coeffs_one_y)
+    test_two_x = np.linalg.solve(R_two_T, coeffs_two_y)
+
+    print("\nDataset one, computed coeffs _x_ and np.linalg result:")
+    print(coeffs_one_x)
+    print(test_one_x)
+    print("\nDataset two, computed coeffs _x_ and np.linalg result:")
+    print(coeffs_two_x)
+    print(test_two_x)

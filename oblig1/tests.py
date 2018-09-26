@@ -52,5 +52,6 @@ class TestLinregMethods(unittest.TestCase):
         self.assertTrue(np.allclose(exp_L,comp_L, 1e-16))
         self.assertTrue(np.allclose(exp_D,comp_D,1e-16))
         self.assertTrue(np.allclose(exp_L_T,comp_L_T,1e-16))
+
 if __name__ == '__main__':
     unittest.main()
