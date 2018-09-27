@@ -1,5 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn
+seaborn.set()
 
 # Function definitions
 def vandermonde_matrix(data, m):
@@ -126,18 +128,7 @@ if __name__ == '__main__':
     poly_one = polynomial_degree_m(x, coeffs_one, m)
     poly_two = polynomial_degree_m(x, coeffs_two, m)
 
-    # Plotting
-    plt.subplot(1,2,1)
-    plt.plot(x, data_one, 'o')
-    plt.plot(x, poly_one, 'r', label='Fit')
-    plt.legend()
 
-    plt.subplot(1,2,2)
-    plt.plot(x, data_two, 'o')
-    plt.plot(x, poly_two, 'r', label='Fit')
-    plt.legend()
-
-    plt.show()
     # =============================================
     # =  Cholesky factorization                   =
     # =============================================
@@ -184,3 +175,34 @@ if __name__ == '__main__':
     print("\nDataset two, computed coeffs _x_ and np.linalg result:")
     print(coeffs_two_x)
     print(test_two_x)
+
+    # Plotting
+    plt.subplot(1,2,1)
+    plt.plot(x, data_one, 'o')
+    plt.plot(x, poly_one, 'r', label='QR fit')
+    plt.legend()
+
+    plt.subplot(1,2,2)
+    plt.plot(x, data_one, 'o')
+    plt.plot(x, poly_two, 'r', label='QR fit')
+    plt.suptitle('Least Squares using QR Factorization')
+    plt.legend()
+
+    #plt.show()
+    plt.savefig("report/figures/QR.pdf")
+    plt.cla()
+
+    plt.subplot(1,2,1)
+    plt.plot(x, data_two, 'o')
+
+    plt.plot(x, polynomial_degree_m(x, coeffs_one_x, m), 'r', label="Cholesky fit")
+    plt.legend()
+
+    plt.subplot(1,2,2)
+    plt.plot(x, data_two, 'o')
+    plt.plot(x, polynomial_degree_m(x, coeffs_two_x, m), 'r', label="Cholesky fit")
+    plt.suptitle('Least Squares using Cholesky Factorization')
+    plt.legend()
+
+    #plt.show()
+    plt.savefig("report/figures/Cholesky.pdf")
