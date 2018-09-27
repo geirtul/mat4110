@@ -1,7 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import seaborn
-seaborn.set()
 
 # Function definitions
 def vandermonde_matrix(data, m):
@@ -20,12 +18,10 @@ def back_substitution(mat_A, b):
     """
     N = len(mat_A[0])
     x = np.zeros(N)
-    print("Inside back_substitution.\n")
     for i in reversed(range(N)):
         sum = 0
         for j in range(i+1,N):
             sum += mat_A[i,j]*x[j]
-        print("Sum = ", sum, " | b[i] = ", b[i], " | A[i,i]", mat_A[i,i])
         x[i] = (b[i] - sum)/mat_A[i,i]
     return x
 
@@ -43,17 +39,12 @@ def forward_substitution(mat_A, b):
         x[i] = (b[i] - sum)/mat_A[i,i]
     return x
 
-def find_coeffs_from_data(data, m):
+def find_coeffs_from_data(x, data, m):
     """Find the coefficients for a smooth function fitting
     using the QR factorization approach."""
-    A = vandermonde_matrix(data, m)
-    print("Inside find_coeffs_from_data, printing shapes of A, q, r, and coeffs.")
+    A = vandermonde_matrix(x, m)
     q,r = np.linalg.qr(A)
-    print(A.shape, q.shape, r.shape)
-    print("Inside find coeffs. What is Q_T dot data?")
-    print(q.T.dot(data))
     coeffs = back_substitution(r, q.T.dot(data))
-    print(coeffs.shape)
     return coeffs
 
 def cholesky_factorization(A):
@@ -85,11 +76,21 @@ def polynomial_degree_m(x, coeffs, m):
             polynomial[i] += coeffs[j]*x[i]**j
     return polynomial
 
+def condition_number(A):
+    """Find the condition number for a problem given n n x m matrix as
+    in Ax = b"""
+    u, s, vh = np.linalg.svd(A)
+    sigma_max = np.amax(s)
+    sigma_min = np.amin(s)
+    K = sigma_max / sigma_min
+    return K
+
 if __name__ == '__main__':
-    """Runs the calculations."""
-    print("\n========================================================")
-    print("===================  BEGIN NEW RUN =====================")
-    print("========================================================\n")
+    """
+    Runs the calculations.
+    Change 'm' to change the order of the fitted polynomial.
+    Change 'eps' to increase/decrese the noise in the datasets.
+    """
 
     # Datasets as defined in task.
     n = 30
@@ -108,38 +109,30 @@ if __name__ == '__main__':
     # =  QR-Factorization part                    =
     # =============================================
     # Find coefficients
-    coeffs_one = find_coeffs_from_data(data_one, m)
-    coeffs_two = find_coeffs_from_data(data_two, m)
-    test_A_one = vandermonde_matrix(data_one, m)
-    test_A_two = vandermonde_matrix(data_two, m)
-    test_coeffs_one = np.linalg.solve(test_A_one.T.dot(test_A_one), test_A_one.T.dot(data_one))
-    test_coeffs_two = np.linalg.solve(test_A_two.T.dot(test_A_two), test_A_two.T.dot(data_two))
-
-    print("QR factorization results\n=======================")
-    print("Dataset one, computed coefficients and np.linalg result:")
-    print(coeffs_one)
-    print(test_coeffs_one)
-    print("\nDataset one, computed coefficients and np.linalg result:")
-    print(coeffs_two)
-    print(test_coeffs_two)
-    print("=============")
+    coeffs_one = find_coeffs_from_data(x, data_one, m)
+    coeffs_two = find_coeffs_from_data(x, data_two, m)
+    test_A_one = vandermonde_matrix(x, m)
+    test_A_two = vandermonde_matrix(x, m)
+    test_coeffs_one = np.linalg.solve(test_A_one.T.dot(test_A_one),
+                                        test_A_one.T.dot(data_one))
+    test_coeffs_two = np.linalg.solve(test_A_two.T.dot(test_A_two),
+                                        test_A_two.T.dot(data_two))
 
     # Generate polynomial fits.
     poly_one = polynomial_degree_m(x, coeffs_one, m)
     poly_two = polynomial_degree_m(x, coeffs_two, m)
-
 
     # =============================================
     # =  Cholesky factorization                   =
     # =============================================
 
     # Set up matrices
-    A_one = vandermonde_matrix(data_one,m)
+    A_one = vandermonde_matrix(x, m)
     A_one_T = A_one.T
     B_one = A_one.T.dot(A_one)
     L_one,D_one,L_one_T = cholesky_factorization(B_one)
 
-    A_two = vandermonde_matrix(data_two,m)
+    A_two = vandermonde_matrix(x, m)
     A_two_T = A_two.T
     B_two = A_two.T.dot(A_two)
     L_two,D_two,L_two_T = cholesky_factorization(B_two)
@@ -153,28 +146,17 @@ if __name__ == '__main__':
     # Solve Ry = A^T B
     coeffs_one_y = forward_substitution(R_one, A_one_T.dot(data_one))
     coeffs_two_y = forward_substitution(R_two, A_two_T.dot(data_two))
-    test_one_y = np.linalg.solve(R_one, A_one_T.dot(data_one))
-    test_two_y = np.linalg.solve(R_two, A_two_T.dot(data_two))
-    print("\nCholesky factorization results\n=======================")
-    print("Dataset one, computed coeffs _y_ and np.linalg result:")
-    print(coeffs_one_y)
-    print(test_one_y)
-    print("\nDataset two, computed coeffs _y_ and np.linalg result:")
-    print(coeffs_two_y)
-    print(test_two_y)
 
     # Solve R_T x = y
     coeffs_one_x = back_substitution(R_one_T, coeffs_one_y)
     coeffs_two_x = back_substitution(R_two_T, coeffs_two_y)
-    test_one_x = np.linalg.solve(R_one_T, coeffs_one_y)
-    test_two_x = np.linalg.solve(R_two_T, coeffs_two_y)
 
-    print("\nDataset one, computed coeffs _x_ and np.linalg result:")
-    print(coeffs_one_x)
-    print(test_one_x)
-    print("\nDataset two, computed coeffs _x_ and np.linalg result:")
-    print(coeffs_two_x)
-    print(test_two_x)
+    # Calculating condition numbers.
+    A = vandermonde_matrix(x,m)
+    B = A.T.dot(A)
+    print("Condition number for QR = ", condition_number(A))
+    print("Condition number for Cholesky = ", condition_number(B))
+
 
     # Plotting
     plt.subplot(1,2,1)
@@ -183,26 +165,28 @@ if __name__ == '__main__':
     plt.legend()
 
     plt.subplot(1,2,2)
-    plt.plot(x, data_one, 'o')
+    plt.plot(x, data_two, 'o')
     plt.plot(x, poly_two, 'r', label='QR fit')
-    plt.suptitle('Least Squares using QR Factorization')
+    plt.suptitle('Least Squares using QR Factorization, m = {}'.format(m))
     plt.legend()
 
-    #plt.show()
-    plt.savefig("report/figures/QR.pdf")
+    plt.show()
+    #plt.savefig("report/figures/QR_{}.pdf".format(m))
+
+    # Clear axis and figures for saving figures.
     plt.cla()
+    plt.clf()
 
     plt.subplot(1,2,1)
-    plt.plot(x, data_two, 'o')
-
+    plt.plot(x, data_one, 'o')
     plt.plot(x, polynomial_degree_m(x, coeffs_one_x, m), 'r', label="Cholesky fit")
     plt.legend()
 
     plt.subplot(1,2,2)
     plt.plot(x, data_two, 'o')
     plt.plot(x, polynomial_degree_m(x, coeffs_two_x, m), 'r', label="Cholesky fit")
-    plt.suptitle('Least Squares using Cholesky Factorization')
+    plt.suptitle('Least Squares using Cholesky Factorization, m = {}'.format(m))
     plt.legend()
 
-    #plt.show()
-    plt.savefig("report/figures/Cholesky.pdf")
+    plt.show()
+    #plt.savefig("report/figures/Cholesky_{}.pdf".format(m))
