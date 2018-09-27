@@ -13,7 +13,7 @@ def vandermonde_matrix(data, m):
 
 def back_substitution(mat_A, b):
     """
-    Apply back substitution to an upper triangular matrix
+    Apply back substitution to an upper triangular matrix A
     and return the vector x in the matrix equation Ax = b
     """
     N = len(mat_A[0])
@@ -23,13 +23,13 @@ def back_substitution(mat_A, b):
         sum = 0
         for j in range(i+1,N):
             sum += mat_A[i,j]*x[j]
-        print("Sum = ", sum, " | b[i] = ", b[i])
+        print("Sum = ", sum, " | b[i] = ", b[i], " | A[i,i]", mat_A[i,i])
         x[i] = (b[i] - sum)/mat_A[i,i]
     return x
 
 def forward_substitution(mat_A, b):
     """
-    Apply forward substitution to a lower triangular matrix
+    Apply forward substitution to a lower triangular matrix A
     and return the vector x in the matrix equation Ax = b
     """
     N = len(mat_A[0])
@@ -42,12 +42,16 @@ def forward_substitution(mat_A, b):
     return x
 
 def find_coeffs_from_data(data, m):
-    """Find the coefficients for a smooth function fitting."""
+    """Find the coefficients for a smooth function fitting
+    using the QR factorization approach."""
     A = vandermonde_matrix(data, m)
+    print("Inside find_coeffs_from_data, printing shapes of A, q, r, and coeffs.")
     q,r = np.linalg.qr(A)
+    print(A.shape, q.shape, r.shape)
     print("Inside find coeffs. What is Q_T dot data?")
     print(q.T.dot(data))
     coeffs = back_substitution(r, q.T.dot(data))
+    print(coeffs.shape)
     return coeffs
 
 def cholesky_factorization(A):
@@ -68,7 +72,7 @@ def cholesky_factorization(A):
 
 def polynomial_degree_m(x, coeffs, m):
     """
-    Generate p(x) where p is a polynomial of degree mself.
+    Generate p(x) where p is a polynomial of degree m.
     The polynomial coefficients are found using QR factorization and
     back substitution. (find_coeffs_from_data)
     """
