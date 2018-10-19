@@ -14,3 +14,5 @@ im1 = imread('images/chessboard.png', as_gray=True)
 im2 = imread('images/jellyfish.jpg', as_gray=True)
 im3 = imread('images/new_york.jpg', as_gray=True)
 
+print(np.amax(im1))
+
